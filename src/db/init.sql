@@ -83,3 +83,10 @@ CREATE TABLE IF NOT EXISTS orders (
 -- AL MOMENTO de la compra (no referenciamos products.price
 -- directamente, porque ese precio puede cambiar después).
 -- ========================================
+CREATE TABLE IF NOT EXISTS order_items (
+    id              SERIAL PRIMARY KEY,
+    order_id        INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id      INTEGER NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    quantity        INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price      NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0)
+);
