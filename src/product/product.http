@@ -38,3 +38,12 @@ Content-Type: application/json
     "stock": 10,
     "image_url": null
 }
+
+### Eliminar producto por id (reemplazá el 1 por un id real)
+### (Hoy SIN protección - pendiente middleware JWT + rol ADMIN)
+DELETE http://localhost:3000/products/4
+Content-Type: application/json
+
+### Caso de error: eliminar un id que no existe (debería devolver 404)
+DELETE http://localhost:3000/products/99999
+Content-Type: application/json
