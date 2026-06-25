@@ -7,17 +7,28 @@ export class PostgresCartRepository implements ICartRepository {
     constructor(private readonly pool:Pool){}
 
     private toEntity(row: QueryResultRow): CartItem {
+        const quantity = row.quantity;
+        const unitPrice = Number(row.price);
         return {
             id: row.id,
             userId: row.user_id,
             productId: row.product_id,
-            quantity: row.quantity,
+            quantity,
+            unitPrice,
+            subtotal: Math.round(quantity * unitPrice * 100) / 100,
             createdAt: row.created_at
-        }   
+        }
     }
 
     async findByUserId(userId:number): Promise<CartItem[]>{
-        const {rows} = await this.pool.query(`SELECT * FROM cart_items WHERE user_id = $1 ORDER BY created_at`, [userId])
+        const {rows} = await this.pool.query(
+            `SELECT ci.*, p.price
+             FROM cart_items ci
+             JOIN products p ON p.id = ci.product_id
+             WHERE ci.user_id = $1
+             ORDER BY ci.created_at`,
+            [userId],
+        )
         return rows.map((r)=>this.toEntity(r))
     }
 
@@ -28,7 +39,7 @@ export class PostgresCartRepository implements ICartRepository {
          VALUES ($1, $2, $3)
          ON CONFLICT (user_id, product_id)
          DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity
-         RETURNING *`,
+         RETURNING *, (SELECT price FROM products WHERE id = product_id) AS price`,
         [userId, productId, quantity],
       );
       return this.toEntity(rows[0]);
@@ -43,7 +54,7 @@ export class PostgresCartRepository implements ICartRepository {
   async setQuantity(userId: number, productId:number, quantity:number): Promise<CartItem |  null>{
     const {rows} = await this.pool.query(`UPDATE cart_items SET quantity = $3
         WHERE user_id = $1 AND product_id = $2
-        RETURNING *`, [userId, productId, quantity])
+        RETURNING *, (SELECT price FROM products WHERE id = product_id) AS price`, [userId, productId, quantity])
     return rows.length ? this.toEntity(rows[0]) : null
   }
 

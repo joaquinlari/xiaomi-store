@@ -8,7 +8,8 @@ export class CartService {
 
   async getCart(userId: number): Promise<Cart> {
     const items = await this.repo.findByUserId(userId);
-    return { userId, items };
+    const total = Math.round(items.reduce((acc, i) => acc + i.subtotal, 0) * 100) / 100;
+    return { userId, items, total };
   }
 
   async addItem(userId: number, dto: AddItemDto): Promise<Cart> {
