@@ -71,8 +71,19 @@ export class UserController {
     try {
       const { name, email, password, secretKey } = req.body;
 
-      // La validación de tu clave secreta
-      if (secretKey !== "super_secreto_utn_2026") {
+      const expectedSecretKey = process.env.ADMIN_SECRET_KEY;
+
+      if (!expectedSecretKey) {
+        console.error(
+          "ADMIN_SECRET_KEY no está configurada en el .env. No se puede crear administradores.",
+        );
+        res
+          .status(500)
+          .json({ message: "Funcionalidad no disponible en este entorno" });
+        return;
+      }
+
+      if (secretKey !== expectedSecretKey) {
         res
           .status(403)
           .json({ message: "No tienes permiso para crear administradores" });
@@ -95,7 +106,7 @@ export class UserController {
       const newUser = await this.userService.createUser(userData);
       res.status(201).json(newUser);
     } catch (error) {
-      console.error("❌ Error en createAdmin:", error);
+      console.error(" Error en createAdmin:", error);
       res.status(500).json({ message: "Error al crear administrador" });
     }
   }

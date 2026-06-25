@@ -1,4 +1,5 @@
-import { App } from './app';
+import { App } from "./app";
+import { pool } from "./config";
 
-const application = new App();
-application.start();
+const application = new App(pool);
+application.start;

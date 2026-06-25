@@ -1,28 +1,20 @@
 import { Router } from "express";
 import { UserController } from "./users.controller";
+import { UserService } from "./users.service";
+import { PostgresUserRepository } from "./users.repository.postgres";
+import { pool } from "../config";
 
-export class UserRoutes {
-  public readonly router = Router();
+const router = Router();
 
-  constructor(private readonly userController: UserController) {
-    this.initializeRoutes();
-  }
-  private initializeRoutes() {
-    this.router.post("/admin", (req, res) =>
-      this.userController.createAdmin(req, res),
-    );
-    this.router.post("/", (req, res) =>
-      this.userController.createUser(req, res),
-    );
-    this.router.get("/", (req, res) => this.userController.getAll(req, res));
-    this.router.get("/:id", (req, res) =>
-      this.userController.getById(req, res),
-    );
-    this.router.put("/:id", (req, res) =>
-      this.userController.updateUser(req, res),
-    );
-    this.router.delete("/:id", (req, res) =>
-      this.userController.deleteUser(req, res),
-    );
-  }
-}
+const userRepository = new PostgresUserRepository(pool);
+const userService = new UserService(userRepository);
+const userController = new UserController(userService);
+
+router.post("/admin", (req, res) => userController.createAdmin(req, res));
+router.post("/", (req, res) => userController.createUser(req, res));
+router.get("/", (req, res) => userController.getAll(req, res));
+router.get("/:id", (req, res) => userController.getById(req, res));
+router.put("/:id", (req, res) => userController.updateUser(req, res));
+router.delete("/:id", (req, res) => userController.deleteUser(req, res));
+
+export default router;
